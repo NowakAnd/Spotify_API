@@ -1,31 +1,27 @@
-import os
 import base64
 import json
-from re import search
+import webbrowser
 
-from dotenv import load_dotenv
 from requests import post, get
 from http.client import OK
 
-#CREATE .env WHERE YOU ARE GOING TO STORE CLIENT_ID AND SECRET_ID FROM SPOTIFY API
+from auth_server import app
+from definitions import TOKEN_URL, CLI_ID, SECRET_ID
 
-load_dotenv()
-cli_id = os.getenv("CLIENT_ID")
-secret_id = os.getenv("CLIENT_SECRET")
+
+#CREATE .env WHERE YOU ARE GOING TO STORE CLIENT_ID AND SECRET_ID FROM SPOTIFY API
 
 
 class Spotify:
-    def __init__(self, client_id, client_secret) -> None:
-        self.client_id = client_id
-        self.client_secret = client_secret
+    def __init__(self) -> None:
         self.token = self.get_token()
 
     def get_token(self) -> str:
-        auth_string : str = self.client_id + ":" + self.client_secret
+        auth_string : str = CLI_ID + ":" + SECRET_ID
         auth_bytes = auth_string.encode("utf-8")
         auth_base64 = str(base64.b64encode(auth_bytes), "utf-8")
 
-        url = 'https://accounts.spotify.com/api/token'
+        url = TOKEN_URL
         headers = {
             "Authorization": "Basic " + auth_base64,
             "Content-Type": "application/x-www-form-urlencoded"
@@ -68,11 +64,13 @@ class Spotify:
 
 
 
-
 if __name__ == "__main__":
-    spotify = Spotify(cli_id, secret_id)
-    art_id = spotify.search_artist("Babymetal")["id"]
-    songs = spotify.get_song_by_artist_id(art_id)
+    spotify = Spotify()
+    app.run(port=3000, debug=True)
+    webbrowser.open_new('http://127.0.0.1:3000/login')
 
-    for index, song in enumerate(songs):
-        print(f"{index+1}: {song['name']}")
+    # art_id = spotify.search_artist("Babymetal")["id"]
+    # songs = spotify.get_song_by_artist_id(art_id)
+    #
+    # for index, song in enumerate(songs):
+    #     print(f"{index+1}: {song['name']}")
