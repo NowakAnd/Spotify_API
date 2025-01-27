@@ -1,29 +1,41 @@
-import json
-import os
+import webbrowser
 
-from requests import post
-from requests.auth import HTTPBasicAuth
+from urllib.parse import parse_qs
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from requests_oauthlib import OAuth2Session
-from flask import Flask, request, redirect
 
-from definitions import TOKEN_URL, REDIRECT_URI, AUTH_URL, CLI_ID, SECRET_ID
+from definitions import REDIRECT_URI, AUTH_URL, CLI_ID
 
-app = Flask(__name__)
+class CallbackHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        query_components = parse_qs(self.path[2:])
+        if 'allback?code' in query_components:
+            self.server.code = query_components['allback?code']
+            self.send_response(200)
+            self.end_headers()
+        else:
+            self.send_response(400)
+            self.end_headers()
 
-@app.route("/login")
-def login():
-    o2auth = OAuth2Session(CLI_ID, scope="user-read-playback-state", redirect_uri=REDIRECT_URI)
-    auth_url, state = o2auth.authorization_url(AUTH_URL)
-    return redirect(auth_url)
+class AuthServer:
+    def __init__(self, scope: str) -> None:
+        self.scope = scope
 
-@app.route("/callback", methods=['GET'])
-def callback():
-    code = request.args.get('code')
-    form = {
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": REDIRECT_URI
-    }
-    result = post(url=TOKEN_URL, auth=HTTPBasicAuth(CLI_ID, SECRET_ID),
-                  data=form)
-    return json.dumps(result.json())
+    def get_auth_url(self) -> str:
+        """
+        Get url of Spotify authentication page with desired scopes.
+        :return: Authentication URL
+        """
+        o2auth = OAuth2Session(CLI_ID, scope=self.scope, redirect_uri=REDIRECT_URI)
+        auth_url, _ = o2auth.authorization_url(AUTH_URL)
+        return auth_url
+
+    def callback(self) -> str:
+        """
+        Opens web browser to log to user account and retrieve code required to access user token
+        :return: Code token
+        """
+        webbrowser.open(self.get_auth_url())
+        server = HTTPServer(('localhost', 3000), CallbackHandler)
+        server.handle_request()
+        return server.code
