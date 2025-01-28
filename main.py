@@ -1,13 +1,12 @@
 import base64
 import json
-import webbrowser
 
 from requests import post, get
 from http.client import OK
 
 from auth_server import AuthServer
 from logger import logger, function_logging
-from definitions import TOKEN_URL, CLI_ID, SECRET_ID, REDIRECT_URI
+from definitions import TOKEN_URL, CLI_ID, SECRET_ID, REDIRECT_URI, SEARCH_URL
 
 
 #CREATE .env WHERE YOU ARE GOING TO STORE CLIENT_ID AND SECRET_ID FROM SPOTIFY API
@@ -17,21 +16,24 @@ class Spotify:
         self.token = None
         self.refresh_token = None
 
-    @function_logging
-    def get_token(self) -> str:
-        auth_string : str = CLI_ID + ":" + SECRET_ID
+    @staticmethod
+    def _create_auth_base64() -> str:
+        auth_string: str = CLI_ID + ":" + SECRET_ID
         auth_bytes = auth_string.encode("utf-8")
         auth_base64 = str(base64.b64encode(auth_bytes), "utf-8")
+        return auth_base64
 
-        url = TOKEN_URL
+    @function_logging
+    def get_token(self) -> str:
         headers = {
-            "Authorization": "Basic " + auth_base64,
+            "Authorization": "Basic " + self._create_auth_base64(),
             "Content-Type": "application/x-www-form-urlencoded"
         }
         form = {
             "grant_type": "client_credentials"
         }
-        result = post(url, headers=headers, data=form)
+        result = post(TOKEN_URL, headers=headers, data=form)
+
         if result.status_code == OK:
             logger.info("Client Credentials access token retrieved.")
             json_result = json.loads(result.content)
@@ -43,13 +45,8 @@ class Spotify:
 
     @function_logging
     def get_user_token(self, scope: str) -> str:
-        auth_string: str = CLI_ID + ":" + SECRET_ID
-        auth_bytes = auth_string.encode("utf-8")
-        auth_base64 = str(base64.b64encode(auth_bytes), "utf-8")
-
-        url = TOKEN_URL
         headers = {
-            "Authorization": "Basic " + auth_base64,
+            "Authorization": "Basic " + self._create_auth_base64(),
             "Content-Type": "application/x-www-form-urlencoded"
         }
         server = AuthServer(scope=scope)
@@ -58,7 +55,8 @@ class Spotify:
             'code': server.callback(),
             'redirect_uri': REDIRECT_URI,
         }
-        result = post(url, headers=headers, data=form)
+        result = post(TOKEN_URL, headers=headers, data=form)
+
         if result.status_code == OK:
             logger.info("Client Credentials access token retrieved.")
             json_result = json.loads(result.content)
@@ -74,11 +72,10 @@ class Spotify:
 
     @function_logging
     def search_artist(self, artist_name: str) -> dict:
-        url = 'https://api.spotify.com/v1/search?'
         headers = self._get_auth_header()
         query = f"q={artist_name}&type=artist&limit=1"
 
-        query_url = url + query
+        query_url = SEARCH_URL + query
         result = get(query_url, headers=headers)
         if result.status_code == OK:
             logger.info(f"Artist {artist_name} found.")
@@ -111,6 +108,7 @@ if __name__ == "__main__":
 
     art_id = spotify.search_artist("Babymetal")["id"]
     songs = spotify.get_song_by_artist_id(art_id)
+    print(songs)
 
     for index, song in enumerate(songs):
         print(f"{index+1}: {song['name']}")
