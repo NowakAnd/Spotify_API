@@ -1,6 +1,8 @@
 import base64
 import json
+import time
 
+from Tools.scripts.generate_opcode_h import header
 from requests import post, get
 from http.client import OK
 
@@ -98,17 +100,40 @@ class Spotify:
             logger.exception(f"Exception occurred: {result.status_code}")
             result.raise_for_status()
 
+    def get_information_current_song(self) -> json.loads:
+        url = 'https://api.spotify.com/v1/me/player/currently-playing'
+        headers = self._get_auth_header()
+        result = get(url=url, headers=headers)
+        if result.status_code == OK:
+            logger.info('Information about current song received')
+            ret = json.loads(result.content)
+            return ret
+        else:
+            logger.exception(f"Exception occurred: {result.status_code}")
+            result.raise_for_status()
 
+    def get_last_listened(self, after_unix_timestamp: int, max_range: int):
+        url= f'https://api.spotify.com/v1/me/player/recently-played?limit={max_range}&after={after_unix_timestamp}'
+        headers = self._get_auth_header()
+        result = get(url=url, headers=headers)
+        if result.status_code == OK:
+            logger.info(f'Last played songs with limit: {max_range} and after: {after_unix_timestamp} received.')
+            ret = json.loads(result.content)
+            return ret
+        else:
+            logger.exception(f"Exception occurred: {result.status_code}")
+            result.raise_for_status()
 
 if __name__ == "__main__":
     spotify = Spotify()
-    spotify.get_user_token('playlist-read-private')
-    print(spotify.token)
-    print(spotify.refresh_token)
+    spotify.get_user_token('playlist-read-private, user-read-currently-playing, user-read-recently-played')
+    print(spotify.get_last_listened(int(time.time()*1000)-600000, 50))
+    print(int(time.time()*1000)-600000)
 
-    art_id = spotify.search_artist("Babymetal")["id"]
-    songs = spotify.get_song_by_artist_id(art_id)
-    print(songs)
 
-    for index, song in enumerate(songs):
-        print(f"{index+1}: {song['name']}")
+    # art_id = spotify.search_artist("Babymetal")["id"]
+    # songs = spotify.get_song_by_artist_id(art_id)
+    # print(songs)
+    #
+    # for index, song in enumerate(songs):
+    #     print(f"{index+1}: {song['name']}")
