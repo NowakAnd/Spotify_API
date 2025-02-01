@@ -46,7 +46,7 @@ class Spotify:
             raise Exception(f"Non-success status code: {result.status_code}")
 
     @function_logging
-    def get_user_token(self, scope: str) -> str:
+    def get_user_token(self, scope: str) -> bool:
         headers = {
             "Authorization": "Basic " + self._create_auth_base64(),
             "Content-Type": "application/x-www-form-urlencoded"
@@ -64,7 +64,7 @@ class Spotify:
             json_result = json.loads(result.content)
             self.token = json_result['access_token']
             self.refresh_token = json_result['refresh_token']
-            return json_result
+            return True
         else:
             logger.exception(f"Non-success status code: {result.status_code}")
             raise Exception(f"Non-success status code: {result.status_code}")
@@ -100,14 +100,22 @@ class Spotify:
             logger.exception(f"Exception occurred: {result.status_code}")
             result.raise_for_status()
 
-    def get_information_current_song(self) -> json.loads:
+    def get_information_current_song(self) -> dict[str: str|bool|int|list[str]]:
         url = 'https://api.spotify.com/v1/me/player/currently-playing'
         headers = self._get_auth_header()
         result = get(url=url, headers=headers)
         if result.status_code == OK:
             logger.info('Information about current song received')
             ret = json.loads(result.content)
-            return ret
+            artist_list = []
+            for artist in ret['item']['album']['artists']:
+                artist_list.append(artist['name'])
+            ret_dict = {'progress_ms': ret['progress_ms'],
+                        'artists': artist_list,
+                        'song': ret['item']['name'],
+                        'song_id': ret['item']['id'],
+                        'play_status': ret['is_playing']}
+            return ret_dict
         else:
             logger.exception(f"Exception occurred: {result.status_code}")
             result.raise_for_status()
@@ -127,10 +135,10 @@ class Spotify:
 if __name__ == "__main__":
     spotify = Spotify()
     spotify.get_user_token('playlist-read-private, user-read-currently-playing, user-read-recently-played')
-    print(spotify.get_last_listened(int(time.time()*1000)-600000, 50))
-    print(int(time.time()*1000)-600000)
-
-
+    print(spotify.get_information_current_song())
+    # while True:
+    #     print(spotify.get_information_current_song())
+    #     time.sleep(5)
     # art_id = spotify.search_artist("Babymetal")["id"]
     # songs = spotify.get_song_by_artist_id(art_id)
     # print(songs)

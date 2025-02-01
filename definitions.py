@@ -8,3 +8,6 @@ REDIRECT_URI = os.getenv("REDIRECT_URI")
 TOKEN_URL = 'https://accounts.spotify.com/api/token'
 AUTH_URL = 'https://accounts.spotify.com/authorize'
 SEARCH_URL = 'https://api.spotify.com/v1/search?'
+SONGS_CSV_PATH = 'Data/songs.csv'
+
+SONG_ACCEPTANCE_TIME_MS = 40_000
