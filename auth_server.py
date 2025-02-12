@@ -8,9 +8,10 @@ from definitions import REDIRECT_URI, AUTH_URL, CLI_ID
 
 class CallbackHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        query_components = parse_qs(self.path[2:])
-        if 'allback?code' in query_components:
-            self.server.code = query_components['allback?code']
+        query_components = parse_qs(self.path)
+        print(query_components)
+        if '/callback?code' in query_components:
+            self.server.code = query_components['/callback?code']
             self.send_response(200)
             self.end_headers()
         else:
@@ -36,6 +37,6 @@ class AuthServer:
         :return: Code token
         """
         webbrowser.open(self.get_auth_url())
-        server = HTTPServer(('localhost', 3000), CallbackHandler)
+        server = HTTPServer(("127.0.0.1", 3000), CallbackHandler)
         server.handle_request()
         return server.code
