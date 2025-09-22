@@ -1,11 +1,33 @@
 import logging
-from datetime import datetime as dt
+import colorlog
 
-logging.basicConfig(filename="logs/" + dt.now().strftime('log%H_%M_%d_%m_%Y.log'),
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', filemode='w',
-                    level='INFO')
+# Create a custom formatter with colors
+formatter = colorlog.ColoredFormatter(
+    "%(log_color)s%(asctime)s - %(levelname)s - %(message)s",
+    datefmt=None,
+    reset=True,
+    log_colors={
+        'DEBUG': 'cyan',
+        'INFO': 'green',
+        'WARNING': 'yellow',
+        'ERROR': 'red',
+        'CRITICAL': 'red,bg_white',
+    },
+    secondary_log_colors={},
+    style='%'
+)
 
+# Create console handler and set level to debug
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+console.setFormatter(formatter)
+
+# Get logger and add the console handler
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(console)
+logger.propagate = False  # Prevents duplicate logs if other loggers are configured
+
 logger.info("LOGS START")
 
 def function_logging(func):

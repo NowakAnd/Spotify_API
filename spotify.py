@@ -1,10 +1,9 @@
 import base64
 import json
-import time
+from typing import Any
 
-from Tools.scripts.generate_opcode_h import header
 from requests import post, get
-from http.client import OK
+from http.client import OK, NO_CONTENT
 
 from auth_server import AuthServer
 from logger import logger, function_logging
@@ -100,7 +99,7 @@ class Spotify:
             logger.exception(f"Exception occurred: {result.status_code}")
             result.raise_for_status()
 
-    def get_information_current_song(self) -> dict[str: str|bool|int|list[str]]:
+    def get_information_current_song(self) -> dict[str, list[Any] | Any] | None:
         url = 'https://api.spotify.com/v1/me/player/currently-playing'
         headers = self._get_auth_header()
         result = get(url=url, headers=headers)
@@ -116,6 +115,9 @@ class Spotify:
                         'song_id': ret['item']['id'],
                         'play_status': ret['is_playing']}
             return ret_dict
+        elif result.status_code == NO_CONTENT:
+            logger.info('No information about current song received')
+            return None
         else:
             logger.exception(f"Exception occurred: {result.status_code}")
             result.raise_for_status()
