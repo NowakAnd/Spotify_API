@@ -54,3 +54,7 @@ if __name__ == '__main__':
             save_status = False
 
 
+def main():
+    spotify = Spotify(auth_spotify=Spotify.AuthSpotify(CLI_ID, SECRET_ID, REDIRECT_URI, SCOPES))
+
+
