@@ -64,11 +64,11 @@ A Python application that tracks your Spotify listening history and maintains a 
 The application maintains a CSV file with the following structure:
 
 | Song_ID |       Song       | Artists | Count  |
-|:-----|:----------------:|:-------:|:------:|
+|:-----:|:----------------:|:-------:|:------:|
 | 1E4TxDKyJXBp0DZVUwURdG   |Hot Hot Racing Car| ['Go2'] |   1    |
 | 7kXporKYnFeKSnoMBbvwYL   |      Dancing On The Street	      |   ['David Dima']   | 2 |
 
 ## 🙏 Acknowledgments
- - Spotify Web API
+ - [Spotify Web API](https://developer.spotify.com/documentation/web-api)
 
 Made with ❤️ by **Andrzej Nowak** 
