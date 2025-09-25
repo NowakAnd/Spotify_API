@@ -1,11 +1,7 @@
-import base64
-import json
-from http import HTTPStatus
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-import requests
 from definitions import *
-from logger import logger, function_logging
+from logger import logger
 from models import AuthSpotify, CurrentSongInfo
 from spotify_api import SpotifyAPI
 

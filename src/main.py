@@ -51,8 +51,13 @@ class SpotifyTracker:
         )
         return Spotify(auth_spotify=auth, user=True)
     
-    def _handle_shutdown(self):
-        """Handle shutdown signals gracefully."""
+    def _handle_shutdown(self, signum, frame):
+        """Handle shutdown signals gracefully.
+        
+        Args:
+            signum: The signal number
+            frame: The current stack frame
+        """
         logger.info("Shutting down gracefully...")
         self.running = False
     

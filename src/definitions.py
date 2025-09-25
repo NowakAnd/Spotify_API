@@ -16,7 +16,7 @@ SEARCH_ENDPOINT = 'https://api.spotify.com/v1/search?'
 CURRENTLY_PLAYING_ENDPOINT = 'https://api.spotify.com/v1/me/player/currently-playing'
 
 #PATHS
-SONGS_CSV_PATH = 'Data/songs.csv'
+SONGS_CSV_PATH = '../Data/songs.csv'
 
 # Application settings
 SONG_ACCEPTANCE_TIME_MS = 40_000  # Time in ms after which a song is considered "played"
