@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List, TypedDict, List, Optional, Dict, Any
 
 @dataclass
 class AuthSpotify:
@@ -7,13 +6,14 @@ class AuthSpotify:
     cli_id: str
     secret_id: str
     redirect_uri: str
-    scope: List[str]
+    scope: list[str]
 
-class CurrentSongInfo(TypedDict):
-    """Type hint for current song information."""
+@dataclass
+class CurrentSongInfo:
+    """Dataclass for current song information."""
     progress_ms: int
-    artists: List[str]
-    song: str
+    artists: list[str]
+    song_name: str
     song_id: str
     play_status: bool
 

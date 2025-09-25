@@ -4,8 +4,6 @@ from http import HTTPStatus
 from typing import Any, Dict, List, Optional
 
 import requests
-
-from auth_server import AuthServer
 from definitions import *
 from logger import logger, function_logging
 from models import AuthSpotify, CurrentSongInfo
@@ -42,35 +40,34 @@ class Spotify:
 
     def get_information_current_song(self) -> Optional[CurrentSongInfo]:
         """Get information about the currently playing song.
-        
+
+        If no song is currently playing, or if a podcast is currently playing instead
+        of a song, this method returns None.
+
         Returns:
-            CurrentSongInfo: Dictionary containing song information if a song is playing,
-                           None if no song is currently playing
-                            
-        Raises:
-            HTTPError: If the API request fails with an error status code
+            Optional[CurrentSongInfo]: Information about the currently playing song, or None
+            if no song is currently playing.
         """
-        url = "https://api.spotify.com/v1/me/player/currently-playing"
-        headers = self._get_auth_header()
-        
-        response = get(url=url, headers=headers)
-        
-        if response.status_code == HTTPStatus.NO_CONTENT:
+        response = self.spotify_api.get_currently_playing()
+
+        if response is None:
             logger.info("No song is currently playing.")
             return None
-            
-        response.raise_for_status()
-        
-        data = response.json()
-        song_info: CurrentSongInfo = {
-            "progress_ms": data["progress_ms"],
-            "artists": [artist["name"] for artist in data["item"]["album"]["artists"]],
-            "song": data["item"]["name"],
-            "song_id": data["item"]["id"],
-            "play_status": data["is_playing"]
-        }
-        
-        logger.info(f"Retrieved information for current song: {song_info['song']}")
+
+        if response.get("currently_playing_type") == "episode":
+            logger.info("Podcast is currently playing instead of a song.")
+            return None
+
+        song_info = CurrentSongInfo(
+            progress_ms = response["progress_ms"],
+            artists = [artist["name"] for artist in response["item"]["album"]["artists"]],
+            song_name= response["item"]["name"],
+            song_id= response["item"]["id"],
+            play_status = response["is_playing"]
+        )
+
+        logger.info(f"Retrieved information for current song: {song_info.song_name}, {song_info.artists}, "
+                    f"{song_info.progress_ms}")
         return song_info
 
     def get_last_listened(
@@ -125,7 +122,7 @@ def main() -> None:
                                                scope=scopes),
                       user=True)
 
-    artist =spotify.search_artist("Babymetal")
+    current_song = spotify.get_information_current_song()
             
     pass
 

@@ -1,4 +1,5 @@
 import base64
+from http import HTTPStatus
 from typing import Any
 
 import requests
@@ -6,7 +7,7 @@ import requests
 from requests import HTTPError
 
 from auth_server import AuthServer
-from definitions import TOKEN_URL, DEFAULT_REQUEST_TIMEOUT_SEC, SEARCH_ENDPOINT
+from definitions import TOKEN_URL, DEFAULT_REQUEST_TIMEOUT_SEC, SEARCH_ENDPOINT, CURRENTLY_PLAYING_ENDPOINT
 from logger import logger
 from models import AuthSpotify, SpotifyTokens
 
@@ -105,6 +106,7 @@ class SpotifyAPI:
                timeout: int = DEFAULT_REQUEST_TIMEOUT_SEC) -> dict[str, Any]:
         """
         Search for an item of a certain type.
+        https://developer.spotify.com/documentation/web-api/reference/search
 
         Args:
             search_query: Query string to search for.
@@ -121,7 +123,6 @@ class SpotifyAPI:
         Raises:
             requests.exceptions.RequestException: If the request fails.
         """
-        headers = self._get_auth_header()
         params = {
             "q": search_query,
             "type": search_type,
@@ -132,10 +133,35 @@ class SpotifyAPI:
         }
 
         response = requests.get(url=SEARCH_ENDPOINT,
-                                headers=headers,
+                                headers=self._get_auth_header(),
                                 params=params,
                                 timeout=timeout)
 
         response.raise_for_status()
 
+        return response.json()
+
+    def get_currently_playing(self, timeout: int = DEFAULT_REQUEST_TIMEOUT_SEC) -> dict[str, Any] | None:
+        """
+        Get information about the user's currently playing track.
+        https://developer.spotify.com/documentation/web-api/reference/get-the-users-currently-playing-track
+
+        Required scope:
+            user-read-currently-playing
+
+        Args:
+            timeout: The maximum number of seconds to wait for the request to complete.
+
+        Returns:
+            Dict[str, Any]: The server response.
+
+        Raises:
+            requests.exceptions.RequestException: If the request fails.
+        """
+        response = requests.get(url=CURRENTLY_PLAYING_ENDPOINT,
+                                headers=self._get_auth_header(),
+                                timeout=timeout)
+        if HTTPStatus.NO_CONTENT == response.status_code:
+            return None
+        response.raise_for_status()
         return response.json()
